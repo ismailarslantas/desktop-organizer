@@ -60,7 +60,8 @@ class Pano:
             s = states.get(it["id"], {}).get("durum", "bekliyor")
             items.append({"id": it["id"], "k": it["kategori"], "d": s})
         used = sorted({it["kategori"] for it in self.plan["ogeler"]})
-        cats = [{"k": k, "klasor": core.CATEGORIES[k][0], "etiket": core.CATEGORIES[k][1],
+        lay = core.plan_layout(self.plan)
+        cats = [{"k": k, "klasor": lay["klasor"][k], "etiket": lay["etiket"][k],
                  "renk": core.CATEGORIES[k][2],
                  "plan": sum(1 for it in self.plan["ogeler"] if it["kategori"] == k)} for k in used]
         with self.mu:
@@ -75,7 +76,7 @@ class Pano:
             except OSError:
                 undo_op = None
         return {
-            "islem": self.op_id, "onayli": approved, "durum": status, "mesaj": message,
+            "islem": self.op_id, "kok_adi": self.plan.get("kok_adi", core.ROOT_NAME), "onayli": approved, "durum": status, "mesaj": message,
             "sure": self.pace, "kategoriler": cats, "ogeler": items,
             "plan_dosya": len(self.plan["ogeler"]),
             "plan_boyut": sum(it["boyut"] for it in self.plan["ogeler"]),

@@ -29,7 +29,7 @@ from pathlib import Path
 IS_WIN = os.name == "nt"
 IS_MAC = sys.platform == "darwin"
 
-ROOT_NAME = "Masaüstü Düzeni"
+ROOT_NAME = "Masaüstü Düzeni"  # Türkçe düzen kökü (eski planlar bunu kullanır)
 APPROVAL_PHRASE = "Planı onaylıyorum"
 RECENT_SECONDS = 15 * 60
 PACE_SECONDS = 50.0
@@ -68,6 +68,23 @@ WEB_EXT = {"html", "htm", "xhtml", "mhtml", "mht"}
 ARCHIVE_EXT = {"zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "zst", "lz", "lzma"}
 INSTALL_EXT = {"exe", "msi", "msix", "msixbundle", "appx", "appxbundle", "dmg", "pkg", "mpkg",
                "deb", "rpm", "appimage", "apk", "iso", "flatpakref", "snap"}
+# Klasör düzenleri. Varsayılan İngilizce; Türkçe isteyen --layout tr seçer. Seçim kaydedilir.
+EN_FOLDERS = {
+    "01": "01_Images", "02": "02_AI Images", "03": "03_Screenshots", "04": "04_Videos",
+    "05": "05_Audio", "06": "06_Documents", "07": "07_Spreadsheets", "08": "08_Presentations",
+    "09": "09_Web Pages", "10": "10_Archives", "11": "11_Installers", "12": "12_Other",
+    "13": "13_Duplicates", "14": "14_AI Files", "15": "15_EPS Files", "16": "16_CDR Files",
+    "17": "17_PSD Files",
+}
+LAYOUTS = {
+    "en": {"ad": "English", "kok": "Organized Desktop", "klasor": EN_FOLDERS,
+           "etiket": {k: v.split("_", 1)[1] for k, v in EN_FOLDERS.items()}},
+    "tr": {"ad": "Türkçe", "kok": ROOT_NAME, "klasor": {k: v[0] for k, v in CATEGORIES.items()},
+           "etiket": {k: v[1] for k, v in CATEGORIES.items()}},
+}
+DEFAULT_LAYOUT = "en"
+ALL_LAYOUT_FOLDERS = {f for lay in LAYOUTS.values() for f in lay["klasor"].values()}
+
 DESIGN_EXT = {"ai": ("14", ".ai Adobe Illustrator dosyası"), "eps": ("15", ".eps vektör dosyası"),
               "cdr": ("16", ".cdr CorelDRAW dosyası"), "psd": ("17", ".psd Photoshop dosyası"),
               "psb": ("17", ".psb Photoshop büyük belge dosyası")}
@@ -693,19 +710,63 @@ def unique_name(name: str, taken: set[str]) -> str:
         i += 1
 
 
-def check_root(desktop: str) -> Path:
-    root = Path(desktop) / ROOT_NAME
+def settings_path() -> Path:
+    return state_dir() / "ayarlar.json"
+
+
+def saved_layout() -> str | None:
+    try:
+        v = json.loads(settings_path().read_text(encoding="utf-8")).get("duzen")
+    except (OSError, ValueError):
+        return None
+    return v if v in LAYOUTS else None
+
+
+def save_layout(layout: str):
+    p = settings_path()
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    data["duzen"] = layout
+    p.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def choose_layout(desktop: str, requested: str | None = None) -> tuple[str, str]:
+    """Hangi klasör düzeni? Sıra: açık seçim > kayıtlı ayar > masaüstündeki mevcut kök > varsayılan."""
+    if requested:
+        if requested not in LAYOUTS:
+            raise DuzenHatasi(f"Bilinmeyen düzen: {requested!r} (seçenekler: {', '.join(LAYOUTS)})")
+        return requested, "bu çalıştırmada seçildi"
+    saved = saved_layout()
+    if saved:
+        return saved, "kayıtlı ayar"
+    present = [k for k, lay in LAYOUTS.items() if os.path.isdir(os.path.join(desktop, lay["kok"]))]
+    if len(present) == 1:
+        return present[0], "masaüstündeki mevcut düzen klasörü"
+    return DEFAULT_LAYOUT, "varsayılan"
+
+
+def check_root(desktop: str, root_name: str = ROOT_NAME) -> Path:
+    if root_name not in {lay["kok"] for lay in LAYOUTS.values()}:
+        raise DuzenHatasi(f"İzin verilmeyen kök klasör adı: {root_name!r}")
+    root = Path(desktop) / root_name
     try:
         st = os.lstat(root)
     except FileNotFoundError:
         return root
     if is_link_like(st):
-        raise DuzenHatasi(f"'{ROOT_NAME}' bir bağlantı/junction; güvenli hedef değil.")
+        raise DuzenHatasi(f"'{root_name}' bir bağlantı/junction; güvenli hedef değil.")
     if not stat.S_ISDIR(st.st_mode):
-        raise DuzenHatasi(f"Masaüstünde '{ROOT_NAME}' adında klasör olmayan bir öğe var.")
+        raise DuzenHatasi(f"Masaüstünde '{root_name}' adında klasör olmayan bir öğe var.")
     if not resolves_inside(root, Path(desktop)):
-        raise DuzenHatasi(f"'{ROOT_NAME}' masaüstü dışını gösteriyor.")
+        raise DuzenHatasi(f"'{root_name}' masaüstü dışını gösteriyor.")
     return root
+
+
+def plan_layout(plan: dict) -> dict:
+    """Plandaki düzen; eski planlar (alan yoksa) Türkçe düzendir."""
+    return LAYOUTS.get(plan.get("duzen", "tr"), LAYOUTS["tr"])
 
 
 def resolves_inside(path: Path, parent: Path) -> bool:
@@ -715,14 +776,19 @@ def resolves_inside(path: Path, parent: Path) -> bool:
 
 
 def build_plan(desktop_override: str | None = None, stability_wait: float = 2.0,
-               recent_seconds: float = RECENT_SECONDS) -> tuple[Path, dict]:
+               recent_seconds: float = RECENT_SECONDS, layout: str | None = None) -> tuple[Path, dict]:
     reconcile_all()
     info = detect_desktop(desktop_override)
     desktop = info["yol"]
     sd = state_dir()
     if is_under(sd, desktop):
         raise DuzenHatasi("Durum klasörü masaüstünün içinde olamaz.")
-    root = check_root(desktop)
+    layout, layout_why = choose_layout(desktop, layout)
+    lay = LAYOUTS[layout]
+    root = check_root(desktop, lay["kok"])
+    save_layout(layout)  # sonraki çalıştırmalar aynı düzeni kullanır
+    other_roots = [x["kok"] for k, x in LAYOUTS.items()
+                   if k != layout and os.path.isdir(os.path.join(desktop, x["kok"]))]
     now = time.time()
     entries, folders, shortcuts, skipped, protected = _scan(desktop, recent_seconds, now)
 
@@ -788,7 +854,7 @@ def build_plan(desktop_override: str | None = None, stability_wait: float = 2.0,
     collisions = []
     for i, it in enumerate(items, 1):
         it["id"] = f"D-{i:04d}"
-        folder = CATEGORIES[it["kategori"]][0]
+        folder = lay["klasor"][it["kategori"]]
         if folder not in taken:
             taken[folder] = _existing_names(root / folder)
         new = unique_name(it["ad"], taken[folder])
@@ -803,6 +869,8 @@ def build_plan(desktop_override: str | None = None, stability_wait: float = 2.0,
         "surum": 1, "islem": op_id, "olusturma": now_iso(),
         "masaustu": desktop, "masaustu_kaynagi": info["kaynak"], "onedrive": info["onedrive"],
         "kok": str(root), "isletim_sistemi": sys.platform,
+        "duzen": layout, "duzen_nedeni": layout_why, "kok_adi": lay["kok"], "klasor_adlari": lay["klasor"],
+        "diger_kokler": other_roots,
         "kurallar": {"son_degisiklik_dk": recent_seconds / 60, "kopya_asil_kurali":
                      "en eski değiştirilme zamanı; eşitse en kısa ad; eşitse alfabetik"},
         "ogeler": items, "kopya_gruplari": dup_groups, "cakismalar": collisions,
@@ -825,20 +893,29 @@ def plan_markdown(plan: dict) -> str:
            f"- **Gerçek masaüstü:** `{plan['masaustu']}`  ",
            f"  (kaynak: {plan['masaustu_kaynagi']}{'; OneDrive yönlendirmeli' if plan['onedrive'] else ''})",
            f"- **Hedef ana klasör:** `{plan['kok']}`",
+           f"- **Klasör düzeni:** {plan_layout(plan)['ad']} ({plan.get('duzen_nedeni', 'eski plan')}). "
+           + ("Türkçe klasör adları için `plan --layout tr`." if plan.get("duzen", "tr") == "en"
+              else "İngilizce klasör adları için `plan --layout en`."),
            f"- **Taşınacak dosya:** {len(items)} · **Toplam:** {format_size(sum(i['boyut'] for i in items))}",
            "", "## Özet", "", "| Kategori | Dosya | Toplam boyut | Hedef klasör |", "|---|---:|---:|---|"]
-    for key, (folder, label, _c) in CATEGORIES.items():
+    lay = plan_layout(plan)
+    root_name = plan.get("kok_adi", ROOT_NAME)
+    if plan.get("diger_kokler"):
+        others = ", ".join(f"`{x}`" for x in plan["diger_kokler"])
+        out.insert(6, f"- **Not:** masaüstünde ayrıca {others} klasörü var; ona dokunulmaz.")
+    for key in CATEGORIES:
         sel = [i for i in items if i["kategori"] == key]
         if sel:
-            out.append(f"| {label} | {len(sel)} | {format_size(sum(i['boyut'] for i in sel))} | `{ROOT_NAME}/{folder}` |")
+            out.append(f"| {lay['etiket'][key]} | {len(sel)} | {format_size(sum(i['boyut'] for i in sel))} | "
+                       f"`{root_name}/{lay['klasor'][key]}` |")
     out += ["", "## Ayrıntılı plan", "", "| Kimlik | Kaynak adı | Hedef yol | Gerekçe |", "|---|---|---|---|"]
     for i in items:
-        rel = f"{ROOT_NAME}/{CATEGORIES[i['kategori']][0]}/{i['hedef_ad']}"
+        rel = f"{root_name}/{lay['klasor'][i['kategori']]}/{i['hedef_ad']}"
         out.append(f"| {i['id']} | {_md(i['ad'])} | `{_md(rel)}` | {_md(i['gerekce'])} |")
     out += ["", "## Kopya grupları", ""]
     if plan["kopya_gruplari"]:
         out.append(f"Kural: {plan['kurallar']['kopya_asil_kurali']} olan dosya normal kategorisine gider; "
-                   "diğerleri `13_Kopyalar`'a taşınır. Hiçbiri silinmez, disk alanı değişmez.")
+                   f"diğerleri `{lay['klasor']['13']}` klasörüne taşınır. Hiçbiri silinmez, disk alanı değişmez.")
         out.append("")
         for g in plan["kopya_gruplari"]:
             out.append(f"- `{g['sha256'][:12]}…` ({format_size(g['boyut'])}): asıl **{_md(g['asil'])}** → "
@@ -1099,7 +1176,7 @@ def execute_plan(op_id: str, pace: float = PACE_SECONDS, control: Control | None
         done = item_states(journal.records())
         desktop = plan["masaustu"]
         validate_desktop(desktop, plan["masaustu_kaynagi"])
-        root = check_root(desktop)  # klasör ilk taşımada oluşturulur
+        root = check_root(desktop, plan.get("kok_adi", ROOT_NAME))  # klasör ilk taşımada oluşturulur
         items = plan["ogeler"]
         n = max(len(items), 1)
         t0 = time.monotonic()
@@ -1160,7 +1237,10 @@ def _move_one(it: dict, desktop: str, root: Path, journal: Journal):
         return
     try:
         _ensure_dir(root, Path(desktop))
-        catdir = _ensure_dir(root / CATEGORIES[it["kategori"]][0], root)
+        folder = Path(it["hedef"]).parent.name
+        if folder not in ALL_LAYOUT_FOLDERS or not same_path(Path(it["hedef"]).parent.parent, root):
+            raise DuzenHatasi("hedef, izin verilen düzen klasörlerinden biri değil")
+        catdir = _ensure_dir(root / folder, root)
     except (DuzenHatasi, OSError) as ex:
         journal.append({"tur": "tasima_hata", **base, "neden": str(ex)})
         return

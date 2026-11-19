@@ -279,6 +279,7 @@
     }
     for (const it of s.ogeler) if (it.d === 'tasindi') onShelf[it.k] = (onShelf[it.k] || 0) + 1;
     for (const [k, v] of Object.entries(shelves)) v.num.textContent = `${onShelf[k] || 0} / ${v.plan}`;
+    $('root-name').textContent = s.kok_adi || '';
     $('cloud-count').textContent = `· ${fmtNum(inCloud)} ${t.files}`;
     $('op').textContent = t.op(s.islem, fmtNum(s.ogeler.length), built_per);
 

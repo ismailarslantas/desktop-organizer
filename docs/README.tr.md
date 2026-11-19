@@ -3,7 +3,8 @@
 # Masaüstü Düzenleyici — Desktop Organizer by Lionstone
 
 Claude Code ve Codex için taşınabilir bir skill. Windows veya macOS masaüstünüzün kökündeki
-dosyaları tek bir **Masaüstü Düzeni** klasöründe 17 kategoriye ayırır. **Hiçbir dosyayı silmez,
+dosyaları tek bir klasörde 17 kategoriye ayırır: varsayılan olarak **Organized Desktop** (İngilizce
+klasör adları), isteyene **Masaüstü Düzeni** (Türkçe klasör adları). **Hiçbir dosyayı silmez,
 üzerine yazmaz, içeriğini değiştirmez; yalnızca taşır.** Taşıma, yazılı planı görüp
 **“Planı onaylıyorum”** dedikten ve yalnızca bu bilgisayarda çalışan panoda **Başlat**'a
 bastıktan sonra başlar. Her taşıma kayda geçer ve tek komutla geri alınabilir.
@@ -37,8 +38,23 @@ git clone https://github.com/ismailarslantas/desktop-organizer.git ~/.codex/skil
 İkisinde birden tek kopya kullanmak için bir klasöre klonlayıp Windows'ta `mklink /J`, macOS'ta
 `ln -s` ile iki konuma bağlayabilirsiniz (ayrıntı İngilizce README'de).
 
-Kurulumdan sonra yeni bir oturumda **“masaüstümü düzenle”** demeniz yeterli. Skill'i kurmak,
+Kurulumdan sonra yeni bir oturumda **“masaüstümü düzenle”** (İngilizce: **“organize my desktop”**)
+demeniz yeterli. Skill'i kurmak,
 dosyaları taşımaya izin vermek anlamına gelmez.
+
+## Türkçe klasör adları
+
+Varsayılan klasör adları İngilizcedir (`Organized Desktop/01_Images …`). Türkçe isterseniz ajana
+**“Türkçe klasör isimleri kullan”** deyin ya da bir kez `plan --layout tr` çalıştırın. Seçim
+kaydedilir, sonraki her düzenleme aynı adları kullanır:
+
+`Masaüstü Düzeni/` → `01_Görseller`, `02_YZ Görselleri`, `03_Ekran Görüntüleri`, `04_Videolar`,
+`05_Ses`, `06_Belgeler`, `07_Tablolar`, `08_Sunumlar`, `09_Web Sayfaları`, `10_Arşivler`,
+`11_Kurulum`, `12_Diğer`, `13_Kopyalar`, `14_AI Dosyaları`, `15_EPS Dosyaları`, `16_CDR Dosyaları`,
+`17_PSD Dosyaları`
+
+Masaüstünde zaten `Masaüstü Düzeni` klasörü varsa araç bunu tanır ve Türkçe düzenle devam eder.
+Düzen değiştirmek eski klasörü asla yeniden adlandırmaz veya taşımaz.
 
 ## Akış
 
@@ -60,6 +76,7 @@ dosyaları taşımaya izin vermek anlamına gelmez.
 ```bash
 python scripts/masaustu.py ortam                       # ortam ve masaüstü kontrolü
 python scripts/masaustu.py plan                        # planı çıkar ve kaydet
+python scripts/masaustu.py plan --layout tr            # Türkçe klasör adlarıyla (seçim kaydedilir)
 python scripts/masaustu.py onayla <ID> --ifade "Planı onaylıyorum"
 python scripts/masaustu.py pano <ID>                   # canlı pano
 python scripts/masaustu.py geri-al --son               # son işlemi geri al
@@ -84,7 +101,8 @@ onay gerekmez, taşınmış dosyalara dokunulmaz ve kalan her dosya taşınmadan
   değişen dosyalar atlanır; bulut dosyaları için indirme başlatılmaz.
 - Aynı isim varsa uzantı korunarak ` (2)` eklenir. Sürücüler arası kopyala-sil yapılmaz.
 - Kopyalar boyut + SHA-256 ile bulunur; en eski değiştirilme zamanlı dosya kendi kategorisinde
-  kalır, diğerleri `13_Kopyalar`'a taşınır. Kopyaları taşımak disk alanı kazandırmaz.
+  kalır, diğerleri `13_Duplicates` (Türkçe düzende `13_Kopyalar`) klasörüne taşınır. Kopyaları taşımak
+  disk alanı kazandırmaz.
 - Kayıtlar masaüstünde değil, kullanıcı uygulama verisi klasöründe tutulur
   (`%LOCALAPPDATA%\MasaustuDuzenleyici`, macOS'ta `~/Library/Application Support/MasaustuDuzenleyici`).
 - Aynı anda iki düzenleme ya da geri alma yapılamaz.

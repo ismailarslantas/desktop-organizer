@@ -28,7 +28,7 @@
 
 ---
 
-Ask your agent *“organize my desktop”* (or *“masaüstümü düzenle”*). It finds your **real** desktop,
+Ask your agent **“organize my desktop”** — or in Turkish, **“masaüstümü düzenle”**. It finds your **real** desktop,
 reads the files in its root, and shows you a plan: what goes where, why, which files are
 duplicates, and what it will leave alone. Nothing moves until you write **`Planı onaylıyorum`**
 (“I approve the plan”) and press **Start** in a dashboard that runs only on your own computer.
@@ -85,30 +85,59 @@ finishes; Stop never undoes what was already moved.
 
 ```text
 Desktop/
-├── Masaüstü Düzeni/            ← the one folder this tool creates
-│   ├── 01_Görseller            images
-│   ├── 02_YZ Görselleri        AI-generated images (metadata or explicit file name only)
-│   ├── 03_Ekran Görüntüleri    screenshots
-│   ├── 04_Videolar             video
-│   ├── 05_Ses                  audio
-│   ├── 06_Belgeler             documents (pdf, docx, txt, md, …)
-│   ├── 07_Tablolar             spreadsheets (xlsx, csv, numbers, …)
-│   ├── 08_Sunumlar             presentations (pptx, key, …)
-│   ├── 09_Web Sayfaları        saved web pages
-│   ├── 10_Arşivler             archives (zip, rar, 7z, tar.gz, …)
-│   ├── 11_Kurulum              installers & disk images (exe, msi, dmg, pkg, iso, …)
-│   ├── 12_Diğer                everything else
-│   ├── 13_Kopyalar             extra copies of identical files
-│   ├── 14_AI Dosyaları         Adobe Illustrator (.ai)
-│   ├── 15_EPS Dosyaları        Encapsulated PostScript (.eps)
-│   ├── 16_CDR Dosyaları        CorelDRAW (.cdr)
-│   └── 17_PSD Dosyaları        Photoshop (.psd, .psb)
+├── Organized Desktop/          ← the one folder this tool creates
+│   ├── 01_Images               images
+│   ├── 02_AI Images            AI-generated images (metadata or explicit file name only)
+│   ├── 03_Screenshots          screenshots
+│   ├── 04_Videos               video
+│   ├── 05_Audio                audio
+│   ├── 06_Documents            documents (pdf, docx, txt, md, …)
+│   ├── 07_Spreadsheets         spreadsheets (xlsx, csv, numbers, …)
+│   ├── 08_Presentations        presentations (pptx, key, …)
+│   ├── 09_Web Pages            saved web pages
+│   ├── 10_Archives             archives (zip, rar, 7z, tar.gz, …)
+│   ├── 11_Installers           installers & disk images (exe, msi, dmg, pkg, iso, …)
+│   ├── 12_Other                everything else
+│   ├── 13_Duplicates           extra copies of identical files
+│   ├── 14_AI Files             Adobe Illustrator (.ai)
+│   ├── 15_EPS Files            Encapsulated PostScript (.eps)
+│   ├── 16_CDR Files            CorelDRAW (.cdr)
+│   └── 17_PSD Files            Photoshop (.psd, .psb)
 ├── Your existing folders/      untouched
 └── Your shortcuts (.lnk .url .webloc .desktop)   untouched
 ```
 
-Folder names are Turkish by design (the project started as *Masaüstü Düzenleyici*). Only the
-category folders that are actually needed get created, and later runs reuse the same layout.
+Only the category folders that are actually needed get created, and later runs reuse the same layout.
+
+#### Türkçe klasör adları / Turkish folder names
+
+Prefer Turkish folder names? Ask the agent for them (*“Türkçe klasör isimleri kullan”*) or run
+`plan --layout tr` once. The choice is saved, and every later run uses it:
+
+| # | English (default) | Türkçe (`--layout tr`) |
+|---|---|---|
+| root | `Organized Desktop` | `Masaüstü Düzeni` |
+| 01 | `01_Images` | `01_Görseller` |
+| 02 | `02_AI Images` | `02_YZ Görselleri` |
+| 03 | `03_Screenshots` | `03_Ekran Görüntüleri` |
+| 04 | `04_Videos` | `04_Videolar` |
+| 05 | `05_Audio` | `05_Ses` |
+| 06 | `06_Documents` | `06_Belgeler` |
+| 07 | `07_Spreadsheets` | `07_Tablolar` |
+| 08 | `08_Presentations` | `08_Sunumlar` |
+| 09 | `09_Web Pages` | `09_Web Sayfaları` |
+| 10 | `10_Archives` | `10_Arşivler` |
+| 11 | `11_Installers` | `11_Kurulum` |
+| 12 | `12_Other` | `12_Diğer` |
+| 13 | `13_Duplicates` | `13_Kopyalar` |
+| 14 | `14_AI Files` | `14_AI Dosyaları` |
+| 15 | `15_EPS Files` | `15_EPS Dosyaları` |
+| 16 | `16_CDR Files` | `16_CDR Dosyaları` |
+| 17 | `17_PSD Files` | `17_PSD Dosyaları` |
+
+Which layout is used: the one you pick with `--layout` → the saved choice → an existing
+`Organized Desktop` or `Masaüstü Düzeni` folder already on the desktop → English. Switching later
+never renames or moves the old folder; the plan just notes that it is there.
 
 ### How files are classified
 
@@ -124,7 +153,7 @@ Images are **never** judged by how they look, and file contents are never sent a
 
 **Duplicates:** files are grouped by size, then compared with SHA-256 — a shared name alone is
 never a duplicate. In each group the file with the **oldest modification time** (then the shortest
-name, then alphabetical) goes to its normal category; the rest go to `13_Kopyalar`.
+name, then alphabetical) goes to its normal category; the rest go to `13_Duplicates`.
 
 ## Safety model
 
@@ -150,7 +179,7 @@ wallpaper and OS settings · the Public desktop.
 
 1. The source is re-checked: still a regular file in the desktop root, same size, modification
    time, file id and content fingerprint as in the plan.
-2. The target is re-checked: inside `Masaüstü Düzeni/<category>`, not a link, on the same drive.
+2. The target is re-checked: inside `Organized Desktop/<category>` (or the Turkish layout), not a link, on the same drive.
 3. An **intent record** is written to the journal and flushed to disk (`fsync`).
 4. The file is renamed with an operation that **refuses to overwrite** (`MoveFileExW` without
    `REPLACE_EXISTING` on Windows, `renamex_np(RENAME_EXCL)` on macOS,
@@ -190,7 +219,7 @@ git clone https://github.com/ismailarslantas/desktop-organizer.git "$env:USERPRO
 ```
 
 Or per project: clone into `<project>/.claude/skills/desktop-organizer`. Start a new session and
-ask *“organize my desktop”*, or type `/desktop-organizer`.
+ask **“organize my desktop”** / **“masaüstümü düzenle”**, or type `/desktop-organizer`.
 
 ### Codex (CLI, IDE extension or app)
 
@@ -204,7 +233,7 @@ On Windows (PowerShell):
 git clone https://github.com/ismailarslantas/desktop-organizer.git "$env:USERPROFILE\.codex\skills\desktop-organizer"
 ```
 
-Restart Codex, then ask *“organize my desktop”* or mention `$desktop-organizer`.
+Restart Codex, then ask **“organize my desktop”** / **“masaüstümü düzenle”**, or mention `$desktop-organizer`.
 
 ### Both, from one copy
 
@@ -245,6 +274,7 @@ S=~/.claude/skills/desktop-organizer/scripts      # or ~/.codex/skills/…
 python $S/masaustu.py env                          # OS, Python, detected desktop (alias of: ortam)
 python $S/masaustu.py detect                       # just the desktop path       (tespit)
 python $S/masaustu.py plan                         # scan + save plan + print it
+python $S/masaustu.py plan --layout tr             # same, with Turkish folder names (remembered)
 python $S/masaustu.py approve 20261119-115538-6cf807 --phrase "Planı onaylıyorum"   # (onayla … --ifade)
 python $S/masaustu.py dashboard 20261119-115538-6cf807                              # (pano)
 python $S/masaustu.py undo --last                  # undo the most recent run     (geri-al --son)
@@ -305,7 +335,8 @@ touches your real one:
 | Open Office files | A document with a `~$` lock file is skipped at plan time and again at move time |
 | AI false positives | Ordinary metadata such as `ImageNumber` is not mistaken for an AI marker |
 | Shortcuts & folders | `.lnk`/`.url` and existing folders untouched; no layout folder created when idle |
-| Links | Symlinks skipped; a linked `Masaüstü Düzeni` is refused |
+| Links | Symlinks skipped; a linked layout folder is refused |
+| Layouts | English by default, Turkish on request and remembered, an existing Turkish folder is kept, old plans still run |
 | Approval | Wrong phrase, missing approval and a tampered plan all refuse to move |
 | Pause / stop / concurrency | Pause holds between files, stop keeps moved files, two runs can’t overlap |
 | Undo conflicts | Occupied original spot and modified files are left in place and reported |
@@ -333,7 +364,6 @@ GitHub Actions runs the suite on **Windows and macOS** (Python 3.9 and 3.13) and
 - **Symbolic-link test on Windows** is skipped unless Developer Mode or admin rights allow
   creating symlinks (junctions are still tested).
 - **Linux** is supported on a best-effort basis (XDG desktop); the skill targets Windows and macOS.
-- Category folder names are Turkish.
 
 ## Regenerating the images
 

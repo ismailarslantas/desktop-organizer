@@ -43,6 +43,7 @@ def cmd_ortam(a) -> int:
     print(f"İşletim sistemi : {platform.system()} {platform.release()} ({sys.platform})")
     print(f"Python          : {platform.python_version()} {'✓' if ok else '✗ (en az 3.9 gerekli)'}")
     print(f"Durum klasörü   : {core.state_dir()}")
+    print(f"Kayıtlı düzen   : {core.saved_layout() or 'yok (ilk planda belirlenir)'}")
     try:
         import webbrowser
         b = webbrowser.get()
@@ -73,7 +74,7 @@ def cmd_tespit(a) -> int:
 
 
 def cmd_plan(a) -> int:
-    pp, plan = core.build_plan(a.masaustu, stability_wait=a.bekleme)
+    pp, plan = core.build_plan(a.masaustu, stability_wait=a.bekleme, layout=a.duzen)
     print(pp.with_suffix(".md").read_text(encoding="utf-8"))
     print(f"İşlem kimliği: {plan['islem']}")
     print(f"Plan dosyası : {pp}")
@@ -158,6 +159,8 @@ def main(argv=None) -> int:
     s.set_defaults(fn=cmd_tespit)
     s = sub.add_parser("plan")
     s.add_argument("--masaustu", "--desktop", dest="masaustu", help="Yalnızca kullanıcı açıkça verdiyse ya da test klasörü için")
+    s.add_argument("--duzen", "--layout", dest="duzen", choices=sorted(core.LAYOUTS),
+                   help="klasör adları: en (Organized Desktop, varsayılan) veya tr (Masaüstü Düzeni); seçim kaydedilir")
     s.add_argument("--bekleme", "--settle", dest="bekleme", type=float, default=2.0, help="kararlılık kontrolü arası saniye")
     s.set_defaults(fn=cmd_plan)
     s = sub.add_parser("onayla", aliases=["approve"])

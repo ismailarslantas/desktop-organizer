@@ -67,8 +67,13 @@ class Sandbox(unittest.TestCase):
         core.approve(plan["islem"], core.APPROVAL_PHRASE)
         return core.execute_plan(plan["islem"], pace=0)
 
+    layout = "en"  # varsayılan düzen
+
     def root(self):
-        return self.desk / core.ROOT_NAME
+        return self.desk / core.LAYOUTS[self.layout]["kok"]
+
+    def f(self, key):
+        return core.LAYOUTS[self.layout]["klasor"][key]
 
 
 class TestClassification(Sandbox):
@@ -216,7 +221,7 @@ class TestMoveAndDuplicates(Sandbox):
         self.put("b.txt", b"ayni icerik", age=OLD)
         self.put("c.txt", b"farkli icrk", age=OLD)  # aynı boyut, farklı içerik
         self.put("rapor.pdf", b"%PDF yeni")
-        self.put("rapor.pdf", b"%PDF eski", where=self.root() / "06_Belgeler")
+        self.put("rapor.pdf", b"%PDF eski", where=self.root() / self.f("06"))
         plan = self.plan()
         items = self.by_name(plan)
         self.assertEqual(items["a.txt"]["kategori"], "06")
@@ -230,15 +235,15 @@ class TestMoveAndDuplicates(Sandbox):
         self.assertEqual(res["tasinan"], 4)
         self.assertEqual(res["kopyalara"], 1)
         r = self.root()
-        self.assertEqual((r / "06_Belgeler" / "rapor.pdf").read_bytes(), b"%PDF eski")
-        self.assertEqual((r / "06_Belgeler" / "rapor (2).pdf").read_bytes(), b"%PDF yeni")
-        self.assertTrue((r / "13_Kopyalar" / "b.txt").exists())
-        self.assertTrue((r / "06_Belgeler" / "a.txt").exists())
-        self.assertFalse((r / "01_Görseller").exists(), "gereksiz kategori klasörü oluşturulmamalı")
+        self.assertEqual((r / self.f("06") / "rapor.pdf").read_bytes(), b"%PDF eski")
+        self.assertEqual((r / self.f("06") / "rapor (2).pdf").read_bytes(), b"%PDF yeni")
+        self.assertTrue((r / self.f("13") / "b.txt").exists())
+        self.assertTrue((r / self.f("06") / "a.txt").exists())
+        self.assertFalse((r / self.f("01")).exists(), "gereksiz kategori klasörü oluşturulmamalı")
 
     def test_same_name_different_content_is_not_duplicate(self):
         self.put("x.txt", b"bir")
-        self.put("x.txt", b"iki", where=self.root() / "06_Belgeler")
+        self.put("x.txt", b"iki", where=self.root() / self.f("06"))
         plan = self.plan()
         self.assertEqual(plan["kopya_gruplari"], [])
         self.assertEqual(self.by_name(plan)["x.txt"]["kategori"], "06")
@@ -311,7 +316,56 @@ class TestMoveAndDuplicates(Sandbox):
         self.assertLess(out["tasinan"], 6)
         self.assertGreaterEqual(out["tasinan"], 1)
         # durdurma önceden taşınanları geri almaz
-        self.assertEqual(len(list((self.root() / "06_Belgeler").iterdir())), out["tasinan"])
+        self.assertEqual(len(list((self.root() / self.f("06")).iterdir())), out["tasinan"])
+
+
+class TestLayouts(Sandbox):
+    def test_default_is_english(self):
+        self.put("rapor.pdf", b"%PDF-1.4")
+        plan = self.plan()
+        self.assertEqual(plan["duzen"], "en")
+        self.run_plan(plan)
+        self.assertTrue((self.desk / "Organized Desktop" / "06_Documents" / "rapor.pdf").exists())
+        self.assertFalse((self.desk / core.ROOT_NAME).exists())
+
+    def test_turkish_layout_is_remembered(self):
+        self.put("rapor.pdf", b"%PDF-1.4")
+        pp, plan = core.build_plan(str(self.desk), stability_wait=0.05, layout="tr")
+        self.assertEqual(plan["kok_adi"], "Masaüstü Düzeni")
+        self.run_plan(plan)
+        self.assertTrue((self.desk / "Masaüstü Düzeni" / "06_Belgeler" / "rapor.pdf").exists())
+        self.put("not.txt", b"ikinci")
+        self.assertEqual(self.plan()["duzen"], "tr", "kayıtlı düzen sonraki planda da kullanılmalı")
+
+    def test_existing_turkish_root_is_kept(self):
+        (self.desk / "Masaüstü Düzeni" / "06_Belgeler").mkdir(parents=True)
+        self.put("rapor.pdf", b"%PDF-1.4")
+        plan = self.plan()
+        self.assertEqual(plan["duzen"], "tr", "masaüstündeki mevcut Türkçe kök korunmalı")
+        self.assertIn("Masaüstü Düzeni/06_Belgeler/rapor.pdf",
+                      core.plan_path(plan["islem"]).with_suffix(".md").read_text(encoding="utf-8"))
+
+    def test_switching_layout_notes_other_root(self):
+        (self.desk / "Masaüstü Düzeni").mkdir()
+        self.put("rapor.pdf", b"%PDF-1.4")
+        pp, plan = core.build_plan(str(self.desk), stability_wait=0.05, layout="en")
+        self.assertEqual(plan["diger_kokler"], ["Masaüstü Düzeni"])
+        self.assertIn("Masaüstü Düzeni", pp.with_suffix(".md").read_text(encoding="utf-8"))
+
+    def test_old_plans_without_layout_still_run(self):
+        self.put("rapor.pdf", b"%PDF-1.4")
+        pp, plan = core.build_plan(str(self.desk), stability_wait=0.05, layout="tr")
+        data = core.json.loads(pp.read_text(encoding="utf-8"))
+        for k in ("duzen", "duzen_nedeni", "kok_adi", "klasor_adlari", "diger_kokler"):
+            data.pop(k)
+        pp.write_text(core.json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        core.approve(plan["islem"], core.APPROVAL_PHRASE)
+        self.assertEqual(core.execute_plan(plan["islem"], pace=0)["tasinan"], 1)
+        self.assertTrue((self.desk / "Masaüstü Düzeni" / "06_Belgeler" / "rapor.pdf").exists())
+
+    def test_unknown_layout_rejected(self):
+        with self.assertRaises(core.DuzenHatasi):
+            core.build_plan(str(self.desk), stability_wait=0.05, layout="de")
 
 
 class TestUndoAndRecovery(Sandbox):
@@ -324,7 +378,7 @@ class TestUndoAndRecovery(Sandbox):
         rep = core.undo(plan["islem"])
         self.assertEqual(rep["geri_alinan"], 2)
         self.assertEqual((self.desk / "a.txt").read_bytes(), b"a")
-        self.assertTrue((self.root() / "06_Belgeler").is_dir(), "geri alma klasör silmemeli")
+        self.assertTrue((self.root() / self.f("06")).is_dir(), "geri alma klasör silmemeli")
 
     def test_undo_conflict_and_modified(self):
         self.put("a.txt", b"a")
@@ -332,14 +386,14 @@ class TestUndoAndRecovery(Sandbox):
         plan = self.plan()
         self.run_plan(plan)
         self.put("a.txt", b"yeni a")  # eski konum doldu
-        moved_b = self.root() / "06_Belgeler" / "b.txt"
+        moved_b = self.root() / self.f("06") / "b.txt"
         moved_b.write_bytes(b"degisti")  # taşındıktan sonra değişti
         rep = core.undo(last=True)
         self.assertEqual(rep["geri_alinan"], 0)
         self.assertEqual(len(rep["cakisma"]), 1)
         self.assertEqual(len(rep["reddedilen"]), 1)
         self.assertEqual((self.desk / "a.txt").read_bytes(), b"yeni a", "üzerine yazılmamalı")
-        self.assertTrue((self.root() / "06_Belgeler" / "a.txt").exists(), "çakışan dosya yerinde kalmalı")
+        self.assertTrue((self.root() / self.f("06") / "a.txt").exists(), "çakışan dosya yerinde kalmalı")
         self.assertTrue(moved_b.exists())
         # çakışma giderilince tekrar denenebilir
         os.rename(self.desk / "a.txt", self.tmp / "kenara.txt")
@@ -367,7 +421,7 @@ class TestUndoAndRecovery(Sandbox):
         core.approve(plan["islem"], core.APPROVAL_PHRASE)
         j = core.Journal(plan["islem"])
         items = self.by_name(plan)
-        cat = self.root() / "06_Belgeler"
+        cat = self.root() / self.f("06")
         cat.mkdir(parents=True)
         for name, moved in (("a.txt", True), ("b.txt", False)):
             it = items[name]
@@ -447,7 +501,7 @@ class TestDashboardSecurity(Sandbox):
         code, st = self.req("GET", "/api/durum")
         self.assertEqual(code, 200)
         blob = json.dumps(st, ensure_ascii=False)
-        for secret in ("a.txt", "b.jpg", str(self.desk), "Desktop"):
+        for secret in ("a.txt", "b.jpg", str(self.desk), self.tmp.name):
             self.assertNotIn(secret, blob, "panoya ad/yol sızmamalı")
 
     def test_start_disabled_until_approved_then_runs(self):

@@ -1,6 +1,6 @@
 ---
 name: desktop-organizer
-description: Desktop Organizer by Lionstone (Masaüstü Düzenleyici). Tidies the root of the user's real Windows or macOS desktop into one "Masaüstü Düzeni" folder with 17 numbered categories, only after the user approves a written plan, with a local live dashboard and journaled undo. Use when the user asks to clean up, organize or tidy their desktop ("masaüstümü düzenle", "masaüstünü toparla", "organize my desktop"), or to undo a previous desktop clean-up.
+description: Desktop Organizer by Lionstone (Masaüstü Düzenleyici). Tidies the root of the user's real Windows or macOS desktop into one "Organized Desktop" folder (or "Masaüstü Düzeni" with Turkish names) with 17 numbered categories, only after the user approves a written plan, with a local live dashboard and journaled undo. Use when the user asks to clean up, organize or tidy their desktop ("organize my desktop", "clean up my desktop", "masaüstümü düzenle", "masaüstünü toparla"), or to undo a previous desktop clean-up.
 ---
 
 # Desktop Organizer by Lionstone
@@ -56,7 +56,7 @@ tell the user what to install and stop.
    Durdur (takes effect after the current file; already moved files stay moved), Son İşlemi Geri
    Al, Panoyu Kapat. If no browser opens, give the user the printed URL.
 6. **Report** — after the dashboard closes, run `masaustu.py durum` and summarise: moved,
-   copies moved to `13_Kopyalar` (this saves no disk space), skipped and why.
+   copies moved to `13_Duplicates` / `13_Kopyalar` (this saves no disk space), skipped and why.
 
 The dashboard has a **TR / EN** switch (top right); it starts in the browser's language.
 
@@ -90,15 +90,30 @@ Every move is journaled (intent → result) in the user's app-data folder, not o
 
 ## Target layout
 
+English is the default; Turkish folder names are available on request.
+
 ```
-Masaüstü Düzeni/
-  01_Görseller  02_YZ Görselleri  03_Ekran Görüntüleri  04_Videolar  05_Ses
-  06_Belgeler   07_Tablolar       08_Sunumlar           09_Web Sayfaları
-  10_Arşivler   11_Kurulum        12_Diğer              13_Kopyalar
-  14_AI Dosyaları  15_EPS Dosyaları  16_CDR Dosyaları  17_PSD Dosyaları
-  (Illustrator, EPS, CorelDRAW, Photoshop)
+Organized Desktop/                         Masaüstü Düzeni/            (--layout tr)
+  01_Images        10_Archives               01_Görseller        10_Arşivler
+  02_AI Images     11_Installers             02_YZ Görselleri    11_Kurulum
+  03_Screenshots   12_Other                  03_Ekran Görüntüleri 12_Diğer
+  04_Videos        13_Duplicates             04_Videolar         13_Kopyalar
+  05_Audio         14_AI Files               05_Ses              14_AI Dosyaları
+  06_Documents     15_EPS Files              06_Belgeler         15_EPS Dosyaları
+  07_Spreadsheets  16_CDR Files              07_Tablolar         16_CDR Dosyaları
+  08_Presentations 17_PSD Files              08_Sunumlar         17_PSD Dosyaları
+  09_Web Pages                               09_Web Sayfaları
 ```
+
+Choosing the layout:
+- The plan prints which layout it uses and why. The choice is saved and reused on later runs.
+- If the user asks for Turkish folder names (e.g. "Türkçe klasör isimleri"), re-plan with
+  `masaustu.py plan --layout tr`; for English, `--layout en`. If the user writes in Turkish and the
+  plan says the layout is the default (`varsayılan`), mention in one line that Turkish folder names
+  are available.
+- An existing `Masaüstü Düzeni` or `Organized Desktop` folder on the desktop is detected and kept.
+  Switching layouts never renames or moves the old folder.
 
 Only the folders that are needed are created. AI images are only separated when generator
 metadata (e.g. Stable Diffusion `parameters`, C2PA/IPTC `trainedAlgorithmicMedia`) or an explicit
-file-name marker exists; never by how an image looks. Unclear images go to `01_Görseller`.
+file-name marker exists; never by how an image looks. Unclear images go to `01_Images` / `01_Görseller`.
