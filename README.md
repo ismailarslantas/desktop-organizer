@@ -126,7 +126,7 @@ name, then alphabetical) goes to its normal category; the rest go to `13_Kopyala
 
 <p align="center"><img src="docs/images/04-safety.png" alt="Moves only. Never deletes." width="100%"></p>
 
-**Never touched:** folders · shortcuts · hidden and system files (`desktop.ini`, `.DS_Store`, …) ·
+**Never touched:** folders · shortcuts · Outlook data files (`.pst`, `.ost`, `.nst` — Outlook opens them from their path) · hidden and system files (`desktop.ini`, `.DS_Store`, …) ·
 symbolic links, junctions and their targets · the Recycle Bin / This PC icons · icon positions,
 wallpaper and OS settings · the Public desktop.
 
@@ -297,6 +297,7 @@ touches your real one:
 | Name collisions | Existing target gets ` (2)`, nothing overwritten |
 | New / changing files | Edited in the last 15 min, changed after approval, appeared after the plan |
 | Partial downloads | `.crdownload`, `.part`, `.tmp` skipped |
+| Outlook data files | `.pst` / `.ost` never enter a plan; bytes and timestamps stay identical through a run and an undo |
 | Open Office files | A document with a `~$` lock file is skipped at plan time and again at move time |
 | AI false positives | Ordinary metadata such as `ImageNumber` is not mistaken for an AI marker |
 | Shortcuts & folders | `.lnk`/`.url` and existing folders untouched; no layout folder created when idle |

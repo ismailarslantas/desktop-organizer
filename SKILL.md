@@ -30,6 +30,8 @@ tell the user what to install and stop.
   **`Planı onaylıyorum`** (or clearly says they approve *this* plan) after seeing it, and only for
   the operation id you showed. Files added later are never included.
 - Do not send file names, paths or contents to any external service.
+- Outlook data files (`.pst`, `.ost`, `.nst`) are never planned, moved or touched; the tool lists
+  them under *Korunan uygulama veri dosyaları*. Never work around this.
 
 ## Workflow
 

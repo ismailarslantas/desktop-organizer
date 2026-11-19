@@ -152,6 +152,20 @@ class TestClassification(Sandbox):
         self.assertEqual(cats["katalog_dallas.png"], "01")
         self.assertEqual(cats["openai.png"], "02")
 
+    def test_outlook_data_files_never_touched(self):
+        pst = self.put("backup.pst", b"!BDN" + b"\x00" * 64)
+        ost = self.put("Outlook.OST", b"!BDN" + b"\x01" * 64)
+        self.put("not.txt", b"tasinir")
+        before = (pst.read_bytes(), os.stat(pst).st_mtime_ns)
+        plan = self.plan()
+        self.assertEqual(set(self.by_name(plan)), {"not.txt"})
+        self.assertEqual(sorted(k["ad"] for k in plan["korunanlar"]), ["Outlook.OST", "backup.pst"])
+        self.assertIn("backup.pst", (core.plan_path(plan["islem"]).with_suffix(".md")).read_text(encoding="utf-8"))
+        self.run_plan(plan)
+        core.undo(plan["islem"])
+        self.assertEqual((pst.read_bytes(), os.stat(pst).st_mtime_ns), before, ".pst taşınmamalı ve değişmemeli")
+        self.assertTrue(ost.exists())
+
     def test_open_office_document_skipped(self):
         self.put("SAP KATALOG NO.xlsx", b"PK\x03\x04")
         self.put("~$SAP Katalog No.xlsx", b"lock")

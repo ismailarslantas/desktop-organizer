@@ -77,6 +77,7 @@ onay gerekmez, taşınmış dosyalara dokunulmaz ve kalan her dosya taşınmadan
 
 ## Güvenlik kuralları (özet)
 
+- Outlook veri dosyaları (`.pst`, `.ost`, `.nst`) asla plana girmez, taşınmaz, ellenmez.
 - Klasörler, kısayollar (`.lnk .url .webloc .desktop`), gizli/sistem dosyaları ve bağlantılar
   yerinde kalır. Simge konumları, duvar kâğıdı ve sistem ayarları değişmez.
 - Word/Excel/PowerPoint'te açık olan (yanında `~$` kilit dosyası bulunan), son 15 dakikada değişen, yarım inen, kilitli, yalnızca bulutta bulunan veya iki kontrol arasında

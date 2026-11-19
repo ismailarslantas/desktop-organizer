@@ -64,6 +64,8 @@ ARCHIVE_EXT = {"zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "zst
 INSTALL_EXT = {"exe", "msi", "msix", "msixbundle", "appx", "appxbundle", "dmg", "pkg", "mpkg",
                "deb", "rpm", "appimage", "apk", "iso", "flatpakref", "snap"}
 SHORTCUT_EXT = {"lnk", "url", "webloc", "desktop", "inetloc"}
+# Uygulamaların kendi yolundan açtığı veri dosyaları: asla plana girmez, asla taşınmaz.
+PROTECTED_EXT = {"pst": "Outlook veri dosyası", "ost": "Outlook veri dosyası", "nst": "Outlook veri dosyası"}
 TEMP_EXT = {"crdownload", "part", "partial", "download", "tmp", "temp", "opdownload",
             "!ut", "bc!", "aria2", "dtapart", "fdmdownload"}
 SYSTEM_NAMES = {"desktop.ini", "thumbs.db", ".ds_store", ".localized", "ehthumbs.db",
@@ -585,7 +587,7 @@ def classify(path: Path, name: str) -> tuple[str, str]:
 
 def _scan(desktop: str, recent_seconds: float, now: float):
     entries = []
-    folders, shortcuts, skipped = [], [], []
+    folders, shortcuts, skipped, protected = [], [], [], []
     with os.scandir(desktop) as it:
         names = sorted(it, key=lambda e: name_key(e.name))
     dir_keys = set()
@@ -628,6 +630,9 @@ def _scan(desktop: str, recent_seconds: float, now: float):
         if ext in SHORTCUT_EXT:
             shortcuts.append(name)
             continue
+        if ext in PROTECTED_EXT:
+            protected.append({"ad": name, "neden": f"{PROTECTED_EXT[ext]}; asla taşınmaz"})
+            continue
         if ext in TEMP_EXT or name.endswith("~"):
             skipped.append({"ad": name, "neden": "geçici/yarım indirme dosyası"})
             continue
@@ -645,7 +650,7 @@ def _scan(desktop: str, recent_seconds: float, now: float):
             skipped.append({"ad": name, "neden": "kilitli veya okunamıyor"})
             continue
         entries.append((name, e.path, st))
-    return entries, folders, shortcuts, skipped
+    return entries, folders, shortcuts, skipped, protected
 
 
 def office_lock_present(name: str, keys: set[str]) -> bool:
@@ -709,7 +714,7 @@ def build_plan(desktop_override: str | None = None, stability_wait: float = 2.0,
         raise DuzenHatasi("Durum klasörü masaüstünün içinde olamaz.")
     root = check_root(desktop)
     now = time.time()
-    entries, folders, shortcuts, skipped = _scan(desktop, recent_seconds, now)
+    entries, folders, shortcuts, skipped, protected = _scan(desktop, recent_seconds, now)
 
     # kararlılık: iki ölçüm arasında boyut/zaman değişenleri ayıkla
     if stability_wait > 0 and entries:
@@ -791,7 +796,7 @@ def build_plan(desktop_override: str | None = None, stability_wait: float = 2.0,
         "kurallar": {"son_degisiklik_dk": recent_seconds / 60, "kopya_asil_kurali":
                      "en eski değiştirilme zamanı; eşitse en kısa ad; eşitse alfabetik"},
         "ogeler": items, "kopya_gruplari": dup_groups, "cakismalar": collisions,
-        "atlananlar": skipped, "klasorler": folders, "kisayollar": shortcuts,
+        "atlananlar": skipped, "klasorler": folders, "kisayollar": shortcuts, "korunanlar": protected,
     }
     pp = plan_path(op_id)
     data = json.dumps(plan, ensure_ascii=False, indent=1).encode("utf-8")
@@ -845,6 +850,8 @@ def plan_markdown(plan: dict) -> str:
     out += ["", "## Dokunulmayanlar", "",
             f"- Klasörler ({len(plan['klasorler'])}): " + (", ".join(_md(f) for f in plan["klasorler"]) or "—"),
             f"- Kısayollar ({len(plan['kisayollar'])}): " + (", ".join(_md(f) for f in plan["kisayollar"]) or "—"),
+            f"- Korunan uygulama veri dosyaları ({len(plan.get('korunanlar', []))}): "
+            + (", ".join(f"{_md(k['ad'])} ({_md(k['neden'])})" for k in plan.get("korunanlar", [])) or "—"),
             "", f"Bu planı uygulamak için tam olarak **\"{APPROVAL_PHRASE}\"** yazın. "
             "Onay yalnızca bu işlem kimliği ve bu listedeki dosyalar için geçerlidir."]
     return "\n".join(out) + "\n"
@@ -1127,6 +1134,9 @@ def _move_one(it: dict, desktop: str, root: Path, journal: Journal):
         st = os.lstat(src)
     except FileNotFoundError:
         journal.append({"tur": "tasima_atlandi", **base, "neden": "kaynak artık yok"})
+        return
+    if ext_of(os.path.basename(src)) in PROTECTED_EXT:
+        journal.append({"tur": "tasima_atlandi", **base, "neden": "korunan uygulama veri dosyası; asla taşınmaz"})
         return
     if is_hidden(os.path.basename(src), st):
         journal.append({"tur": "tasima_atlandi", **base, "neden": "gizli/sistem dosyası oldu"})
