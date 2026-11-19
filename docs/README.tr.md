@@ -79,7 +79,7 @@ onay gerekmez, taşınmış dosyalara dokunulmaz ve kalan her dosya taşınmadan
 
 - Klasörler, kısayollar (`.lnk .url .webloc .desktop`), gizli/sistem dosyaları ve bağlantılar
   yerinde kalır. Simge konumları, duvar kâğıdı ve sistem ayarları değişmez.
-- Son 15 dakikada değişen, yarım inen, kilitli, yalnızca bulutta bulunan veya iki kontrol arasında
+- Word/Excel/PowerPoint'te açık olan (yanında `~$` kilit dosyası bulunan), son 15 dakikada değişen, yarım inen, kilitli, yalnızca bulutta bulunan veya iki kontrol arasında
   değişen dosyalar atlanır; bulut dosyaları için indirme başlatılmaz.
 - Aynı isim varsa uzantı korunarak ` (2)` eklenir. Sürücüler arası kopyala-sil yapılmaz.
 - Kopyalar boyut + SHA-256 ile bulunur; en eski değiştirilme zamanlı dosya kendi kategorisinde

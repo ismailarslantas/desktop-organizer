@@ -82,8 +82,8 @@ AI_NAME = re.compile(
     r"|stable[\s_-]?diffusion|comfyui|novelai|leonardo_phoenix|ideogram|\bsdxl\b|\bai[\s_-]generated",
     re.IGNORECASE)
 AI_META = re.compile(
-    rb"trainedalgorithmicmedia|midjourney|dall[\s\-\xb7.]?e|novelai|stable diffusion|comfyui"
-    rb"|invokeai|adobe firefly|imagen|openai|gpt-4o|sd-metadata|negative prompt",
+    rb"trainedalgorithmicmedia|midjourney|\bdall(?:[\s\-._]|\xc2\xb7)?e\b|novelai|stable diffusion|comfyui"
+    rb"|invokeai|adobe firefly|google imagen|\bimagen [234]\b|\bopenai\b|gpt-4o|sd-metadata|negative prompt",
     re.IGNORECASE)
 AI_PNG_KEYS = {b"parameters", b"prompt", b"workflow", b"sd-metadata", b"invokeai_metadata",
                b"dream", b"generation_data"}
@@ -596,6 +596,7 @@ def _scan(desktop: str, recent_seconds: float, now: float):
             continue
         if stat.S_ISDIR(st.st_mode) and not is_link_like(st):
             dir_keys.add(name_key(e.name))
+    all_keys = {name_key(e.name) for e in names}
     for e in names:
         name = e.name
         try:
@@ -616,6 +617,9 @@ def _scan(desktop: str, recent_seconds: float, now: float):
             continue
         if is_hidden(name, st):
             skipped.append({"ad": name, "neden": "gizli/sistem dosyası"})
+            continue
+        if office_lock_present(name, all_keys):
+            skipped.append({"ad": name, "neden": "şu an Office'te açık (~$ kilit dosyası var)"})
             continue
         if is_cloud_only(st):
             skipped.append({"ad": name, "neden": "yalnızca bulutta; indirme başlatılmaz"})
@@ -642,6 +646,16 @@ def _scan(desktop: str, recent_seconds: float, now: float):
             continue
         entries.append((name, e.path, st))
     return entries, folders, shortcuts, skipped
+
+
+def office_lock_present(name: str, keys: set[str]) -> bool:
+    """Word/Excel/PowerPoint açık belge için yanına '~$' ile başlayan kilit dosyası koyar.
+
+    Uzun adlarda Office ilk bir ya da iki karakteri atar (ör. 'Rapor.docx' -> '~$apor.docx').
+    """
+    if name.startswith("~$"):
+        return False
+    return any(name_key("~$" + name[i:]) in keys for i in (0, 1, 2) if len(name) - i > 4)
 
 
 def _existing_names(d: Path) -> set[str]:
@@ -1120,6 +1134,9 @@ def _move_one(it: dict, desktop: str, root: Path, journal: Journal):
     ok, why = matches(src, it)
     if not ok:
         journal.append({"tur": "tasima_atlandi", **base, "neden": f"plandan sonra değişti: {why}; yeniden incelenmeli"})
+        return
+    if office_lock_present(os.path.basename(src), _existing_names(Path(desktop))):
+        journal.append({"tur": "tasima_atlandi", **base, "neden": "şu an Office'te açık (~$ kilit dosyası var)"})
         return
     try:
         _ensure_dir(root, Path(desktop))

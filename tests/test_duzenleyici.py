@@ -142,6 +142,34 @@ class TestClassification(Sandbox):
         self.assertTrue((self.desk / "Uygulama.lnk").exists())
         self.assertFalse(self.root().exists(), "taşınacak dosya yokken düzen klasörü oluşturulmamalı")
 
+    def test_ordinary_metadata_is_not_ai(self):
+        xmp = b"<x:xmpmeta><exif:ImageNumber>6</exif:ImageNumber><tiff:ImageDescription/></x:xmpmeta>"
+        self.put("urun.png", png_with_text(b"XML:com.adobe.xmp", xmp))
+        self.put("katalog_dallas.png", png_with_text(b"Comment", b"Dallas edition, paperweight"))
+        self.put("openai.png", png_with_text(b"XML:com.adobe.xmp", b"<claim_generator>OpenAI-API</claim_generator>"))
+        cats = {n: i["kategori"] for n, i in self.by_name(self.plan()).items()}
+        self.assertEqual(cats["urun.png"], "01", "ImageNumber gibi alanlar YZ işareti sayılmamalı")
+        self.assertEqual(cats["katalog_dallas.png"], "01")
+        self.assertEqual(cats["openai.png"], "02")
+
+    def test_open_office_document_skipped(self):
+        self.put("SAP KATALOG NO.xlsx", b"PK\x03\x04")
+        self.put("~$SAP Katalog No.xlsx", b"lock")
+        self.put("Uzun Rapor Adi.docx", b"PK\x03\x04")
+        self.put("~$un Rapor Adi.docx", b"lock")
+        self.put("kapali.xlsx", b"PK\x03\x04x")
+        plan = self.plan()
+        sk = self.skipped(plan)
+        self.assertIn("Office", sk["SAP KATALOG NO.xlsx"])
+        self.assertIn("Office", sk["Uzun Rapor Adi.docx"])
+        self.assertEqual(set(self.by_name(plan)), {"kapali.xlsx"})
+        # plandan sonra açılırsa taşıma anında da atlanır
+        core.approve(plan["islem"], core.APPROVAL_PHRASE)
+        self.put("~$kapali.xlsx", b"lock")
+        res = core.execute_plan(plan["islem"], pace=0)
+        self.assertEqual(res["tasinan"], 0)
+        self.assertTrue((self.desk / "kapali.xlsx").exists())
+
     def test_symlink_skipped(self):
         target = self.put("hedef.txt", b"t", where=self.tmp)
         try:

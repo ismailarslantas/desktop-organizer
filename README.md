@@ -135,6 +135,7 @@ wallpaper and OS settings · the Public desktop.
 - modified in the last **15 minutes**;
 - temporary or half-downloaded (`.crdownload`, `.part`, `.partial`, `.download`, `.tmp`, …);
 - size or modification time changed between two checks a moment apart;
+- open in Word / Excel / PowerPoint (an Office `~$` lock file sits next to it);
 - locked, unreadable, or **cloud-only** (OneDrive “Files On-Demand”, iCloud “Optimise Storage”) —
   the tool reads attributes first and never triggers a download;
 - an HTML page that has a companion `name_files` folder (moving one without the other would break
@@ -296,6 +297,8 @@ touches your real one:
 | Name collisions | Existing target gets ` (2)`, nothing overwritten |
 | New / changing files | Edited in the last 15 min, changed after approval, appeared after the plan |
 | Partial downloads | `.crdownload`, `.part`, `.tmp` skipped |
+| Open Office files | A document with a `~$` lock file is skipped at plan time and again at move time |
+| AI false positives | Ordinary metadata such as `ImageNumber` is not mistaken for an AI marker |
 | Shortcuts & folders | `.lnk`/`.url` and existing folders untouched; no layout folder created when idle |
 | Links | Symlinks skipped; a linked `Masaüstü Düzeni` is refused |
 | Approval | Wrong phrase, missing approval and a tampered plan all refuse to move |
