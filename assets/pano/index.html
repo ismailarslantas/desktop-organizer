@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Desktop Organizer by Lionstone</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <div>
+        <h1><span data-i18n="title">Masaüstü Düzenleyici</span> <span class="by" data-i18n="by">Desktop Organizer by Lionstone</span></h1>
+        <p class="op" id="op">—</p>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="lang" role="group" aria-label="Dil / Language">
+        <button type="button" data-lang="tr" aria-pressed="true">TR</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <span class="pill" id="status" role="status" aria-live="polite">…</span>
+    </div>
+  </header>
+
+  <section class="counters">
+    <div class="counter"><span class="label" data-i18n="c_moved">Taşınan dosya</span><strong id="c-moved">0</strong><span class="sub" id="c-moved-sub"></span></div>
+    <div class="counter"><span class="label" data-i18n="c_folders">Kullanılan hedef klasör</span><strong id="c-folders">0</strong><span class="sub" id="c-folders-sub"></span></div>
+    <div class="counter"><span class="label" data-i18n="c_dups">Kopyalar’a taşınan</span><strong id="c-dups">0</strong><span class="sub" data-i18n="c_dups_sub">silinmez · alan kazandırmaz</span></div>
+    <div class="counter"><span class="label" data-i18n="c_bytes">Taşınan toplam boyut</span><strong id="c-bytes">0 B</strong><span class="sub" id="c-bytes-sub"></span></div>
+  </section>
+
+  <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+
+  <section class="controls">
+    <button id="b-start" class="primary" disabled>Başlat</button>
+    <button id="b-pause" disabled>Duraklat</button>
+    <button id="b-stop" disabled data-i18n="stop">Durdur</button>
+    <span class="spacer"></span>
+    <button id="b-undo" class="ghost" disabled data-i18n="undo">Son İşlemi Geri Al</button>
+    <button id="b-close" class="ghost" data-i18n="close">Panoyu Kapat</button>
+  </section>
+  <p class="notice" id="notice" aria-live="polite"></p>
+
+  <main class="stage">
+    <section class="cloud-wrap">
+      <h2><span data-i18n="desktop">Masaüstü</span> <span id="cloud-count" class="count"></span></h2>
+      <div class="cloud" id="cloud"></div>
+      <p class="hint" data-i18n="hint">Dosyalar adsız kutularla gösterilir. Adlar, yollar ve küçük resimler bu panoya gelmez.</p>
+    </section>
+    <section class="shelves-wrap">
+      <h2>Masaüstü Düzeni</h2>
+      <div id="shelves" class="shelves"></div>
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

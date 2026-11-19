@@ -1,0 +1,42 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Scenario tests (temporary sample desktop)
+        run: python -m unittest discover -s tests -v
+      - name: CLI smoke test on a sample desktop
+        shell: bash
+        run: |
+          export MASAUSTU_DUZENLEYICI_DURUM="$RUNNER_TEMP/state"
+          D="$RUNNER_TEMP/Desktop"; mkdir -p "$D"
+          printf '%%PDF-1.4 demo' > "$D/report.pdf"; printf 'a,b\n1,2\n' > "$D/data.csv"
+          touch -d '2 hours ago' "$D/report.pdf" "$D/data.csv" 2>/dev/null || touch -t 202001010000 "$D/report.pdf" "$D/data.csv"
+          python scripts/masaustu.py env || test $? -eq 3
+          OUT=$(python scripts/masaustu.py plan --desktop "$D" --settle 0.2)
+          echo "$OUT"
+          OP=$(echo "$OUT" | awk '/İşlem kimliği/ {print $3}')
+          python scripts/masaustu.py approve "$OP" --phrase "Planı onaylıyorum"
+          python -c "import sys; sys.path.insert(0,'scripts'); import duzen_cekirdek as c; r=c.execute_plan('$OP', pace=0); print(r); assert r['tasinan']==2"
+          python scripts/masaustu.py status
+          python scripts/masaustu.py undo --last
+          test -f "$D/report.pdf" && test -f "$D/data.csv"
+      - name: Real desktop detection (read-only)
+        if: runner.os != 'Linux'
+        run: python scripts/masaustu.py detect
