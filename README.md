@@ -311,8 +311,8 @@ Run them yourself:
 python -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs the suite on **Windows, macOS and Ubuntu** with Python 3.9 and 3.13 on every
-push.
+GitHub Actions runs the suite on **Windows and macOS** (Python 3.9 and 3.13) and **Ubuntu**
+(Python 3.10 and 3.13) on every push.
 
 ## Known limitations
 
