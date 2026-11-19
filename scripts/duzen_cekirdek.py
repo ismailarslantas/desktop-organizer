@@ -50,6 +50,11 @@ CATEGORIES: dict[str, tuple[str, str, str]] = {
     "11": ("11_Kurulum", "Kurulum", "#64748b"),
     "12": ("12_Diğer", "Diğer", "#94a3b8"),
     "13": ("13_Kopyalar", "Kopyalar", "#14b8a6"),
+    # Tasarım dosyaları; 13'ten sonra eklendi ki önceki düzenlerin numaraları değişmesin.
+    "14": ("14_AI Dosyaları", "AI Dosyaları", "#e8590c"),
+    "15": ("15_EPS Dosyaları", "EPS Dosyaları", "#c2255c"),
+    "16": ("16_CDR Dosyaları", "CDR Dosyaları", "#2b8a3e"),
+    "17": ("17_PSD Dosyaları", "PSD Dosyaları", "#1971c2"),
 }
 
 IMAGE_EXT = {"jpg", "jpeg", "jfif", "png", "gif", "webp", "bmp", "tif", "tiff", "heic", "heif",
@@ -63,6 +68,9 @@ WEB_EXT = {"html", "htm", "xhtml", "mhtml", "mht"}
 ARCHIVE_EXT = {"zip", "rar", "7z", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "zst", "lz", "lzma"}
 INSTALL_EXT = {"exe", "msi", "msix", "msixbundle", "appx", "appxbundle", "dmg", "pkg", "mpkg",
                "deb", "rpm", "appimage", "apk", "iso", "flatpakref", "snap"}
+DESIGN_EXT = {"ai": ("14", ".ai Adobe Illustrator dosyası"), "eps": ("15", ".eps vektör dosyası"),
+              "cdr": ("16", ".cdr CorelDRAW dosyası"), "psd": ("17", ".psd Photoshop dosyası"),
+              "psb": ("17", ".psb Photoshop büyük belge dosyası")}
 SHORTCUT_EXT = {"lnk", "url", "webloc", "desktop", "inetloc"}
 # Uygulamaların kendi yolundan açtığı veri dosyaları: asla plana girmez, asla taşınmaz.
 PROTECTED_EXT = {"pst": "Outlook veri dosyası", "ost": "Outlook veri dosyası", "nst": "Outlook veri dosyası"}
@@ -538,6 +546,8 @@ def image_metadata(path, kind: str) -> tuple[set[bytes], bytes]:
 def classify(path: Path, name: str) -> tuple[str, str]:
     """(kategori anahtarı, gerekçe) döndürür. Dosyayı yalnızca okur."""
     ext = ext_of(name)
+    if ext in DESIGN_EXT:  # tasarım dosyaları kendi klasörüne; görsel kuralından önce
+        return DESIGN_EXT[ext]
     head = _read_head(path)
     kind = sniff(head)
 

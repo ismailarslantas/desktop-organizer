@@ -1,6 +1,6 @@
 ---
 name: desktop-organizer
-description: Desktop Organizer by Lionstone (Masaüstü Düzenleyici). Tidies the root of the user's real Windows or macOS desktop into one "Masaüstü Düzeni" folder with 13 numbered categories, only after the user approves a written plan, with a local live dashboard and journaled undo. Use when the user asks to clean up, organize or tidy their desktop ("masaüstümü düzenle", "masaüstünü toparla", "organize my desktop"), or to undo a previous desktop clean-up.
+description: Desktop Organizer by Lionstone (Masaüstü Düzenleyici). Tidies the root of the user's real Windows or macOS desktop into one "Masaüstü Düzeni" folder with 17 numbered categories, only after the user approves a written plan, with a local live dashboard and journaled undo. Use when the user asks to clean up, organize or tidy their desktop ("masaüstümü düzenle", "masaüstünü toparla", "organize my desktop"), or to undo a previous desktop clean-up.
 ---
 
 # Desktop Organizer by Lionstone
@@ -95,6 +95,8 @@ Masaüstü Düzeni/
   01_Görseller  02_YZ Görselleri  03_Ekran Görüntüleri  04_Videolar  05_Ses
   06_Belgeler   07_Tablolar       08_Sunumlar           09_Web Sayfaları
   10_Arşivler   11_Kurulum        12_Diğer              13_Kopyalar
+  14_AI Dosyaları  15_EPS Dosyaları  16_CDR Dosyaları  17_PSD Dosyaları
+  (Illustrator, EPS, CorelDRAW, Photoshop)
 ```
 
 Only the folders that are needed are created. AI images are only separated when generator

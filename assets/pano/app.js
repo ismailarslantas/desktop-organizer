@@ -48,7 +48,8 @@
       },
       cats: { '01': 'Görseller', '02': 'YZ Görselleri', '03': 'Ekran Görüntüleri', '04': 'Videolar', '05': 'Ses',
         '06': 'Belgeler', '07': 'Tablolar', '08': 'Sunumlar', '09': 'Web Sayfaları', '10': 'Arşivler',
-        '11': 'Kurulum', '12': 'Diğer', '13': 'Kopyalar' },
+        '11': 'Kurulum', '12': 'Diğer', '13': 'Kopyalar',
+        '14': 'AI Dosyaları', '15': 'EPS Dosyaları', '16': 'CDR Dosyaları', '17': 'PSD Dosyaları' },
       shelf: 'rafı', locale: 'tr-TR',
     },
     en: {
@@ -94,7 +95,8 @@
       },
       cats: { '01': 'Images', '02': 'AI Images', '03': 'Screenshots', '04': 'Videos', '05': 'Audio',
         '06': 'Documents', '07': 'Spreadsheets', '08': 'Presentations', '09': 'Web Pages', '10': 'Archives',
-        '11': 'Installers', '12': 'Other', '13': 'Duplicates' },
+        '11': 'Installers', '12': 'Other', '13': 'Duplicates',
+        '14': 'AI files', '15': 'EPS files', '16': 'CDR files', '17': 'PSD files' },
       shelf: 'shelf', locale: 'en-US',
     },
   };

@@ -3,7 +3,7 @@
 # Masaüstü Düzenleyici — Desktop Organizer by Lionstone
 
 Claude Code ve Codex için taşınabilir bir skill. Windows veya macOS masaüstünüzün kökündeki
-dosyaları tek bir **Masaüstü Düzeni** klasöründe 13 kategoriye ayırır. **Hiçbir dosyayı silmez,
+dosyaları tek bir **Masaüstü Düzeni** klasöründe 17 kategoriye ayırır. **Hiçbir dosyayı silmez,
 üzerine yazmaz, içeriğini değiştirmez; yalnızca taşır.** Taşıma, yazılı planı görüp
 **“Planı onaylıyorum”** dedikten ve yalnızca bu bilgisayarda çalışan panoda **Başlat**'a
 bastıktan sonra başlar. Her taşıma kayda geçer ve tek komutla geri alınabilir.

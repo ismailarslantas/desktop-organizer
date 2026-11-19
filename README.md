@@ -6,7 +6,7 @@
 
 <p align="center">
   <b>An agent skill for Claude Code and Codex that tidies your Windows or macOS desktop<br>
-  into one folder with 13 categories — only after you approve a written plan.</b>
+  into one folder with 17 categories — only after you approve a written plan.</b>
 </p>
 
 <p align="center">
@@ -98,7 +98,11 @@ Desktop/
 │   ├── 10_Arşivler             archives (zip, rar, 7z, tar.gz, …)
 │   ├── 11_Kurulum              installers & disk images (exe, msi, dmg, pkg, iso, …)
 │   ├── 12_Diğer                everything else
-│   └── 13_Kopyalar             extra copies of identical files
+│   ├── 13_Kopyalar             extra copies of identical files
+│   ├── 14_AI Dosyaları         Adobe Illustrator (.ai)
+│   ├── 15_EPS Dosyaları        Encapsulated PostScript (.eps)
+│   ├── 16_CDR Dosyaları        CorelDRAW (.cdr)
+│   └── 17_PSD Dosyaları        Photoshop (.psd, .psb)
 ├── Your existing folders/      untouched
 └── Your shortcuts (.lnk .url .webloc .desktop)   untouched
 ```
@@ -110,7 +114,7 @@ category folders that are actually needed get created, and later runs reuse the 
 
 | Signal | Used for |
 |---|---|
-| File extension | The main rule for every category |
+| File extension | The main rule for every category; `.ai`, `.eps`, `.cdr` and `.psd` design files each get their own folder |
 | Safe header check (first bytes only) | Confirms raster images and PDFs; an `.png` that is really text goes to *Other*; files without an extension are sniffed |
 | File name markers (`Screenshot`, `Ekran Görüntüsü`, `Bildschirmfoto`, …) and screenshot-tool metadata | Screenshots |
 | Generator metadata — Stable Diffusion `parameters`, ComfyUI `prompt`/`workflow`, C2PA / IPTC `trainedAlgorithmicMedia`, Midjourney/DALL·E/Firefly tags — or an explicit file name (`DALL·E …`, `Gemini_Generated_Image…`) | AI images |
@@ -292,7 +296,7 @@ touches your real one:
 
 | Scenario | Checked |
 |---|---|
-| Normal files | All 13 categories, header sniffing, screenshot and AI markers in names and metadata |
+| Normal files | All 17 categories, header sniffing, screenshot and AI markers in names and metadata |
 | Duplicates | Size + SHA-256 grouping, oldest file kept in its category, same name ≠ duplicate |
 | Name collisions | Existing target gets ` (2)`, nothing overwritten |
 | New / changing files | Edited in the last 15 min, changed after approval, appeared after the plan |
